@@ -1,0 +1,23 @@
+name: Boomi CI/CD
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Run Deployment Script
+        run: bash scripts/deploy.sh
+        env:
+          BOOMI_ACCOUNT_ID: ${{ secrets.BOOMI_ACCOUNT_ID }}
+          BOOMI_USERNAME: ${{ secrets.BOOMI_USERNAME }}
+          BOOMI_PASSWORD: ${{ secrets.BOOMI_PASSWORD }}
+          BOOMI_ENVIRONMENT_ID: ${{ secrets.BOOMI_ENVIRONMENT_ID }}
+          BOOMI_COMPONENT_ID: ${{ secrets.BOOMI_COMPONENT_ID }}
