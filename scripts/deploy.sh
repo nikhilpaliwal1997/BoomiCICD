@@ -17,7 +17,7 @@ PACKAGE_RESPONSE=$(curl -s -o response1.json -w "%{http_code}" -X POST "https://
 echo "HTTP Status: $PACKAGE_RESPONSE"
 cat response1.json
 
-# ❌ Fail if not success
+
 if [ "$PACKAGE_RESPONSE" -ne 200 ]; then
   echo "Package creation FAILED"
   exit 1
