@@ -6,7 +6,7 @@ echo "Starting Boomi Deployment..."
 
 echo "Step 1: Creating Package..."
 
-PACKAGE_RESPONSE=$(curl -s -o response1.json -w "%{http_code}" -X POST "https://api.boomi.com/api/rest/v1/$BOOMI_ACCOUNT_ID/PackagedComponent" \
+PACKAGE_RESPONSE=$(curl -s -o response1.xml -w "%{http_code}" -X POST "https://api.boomi.com/api/rest/v1/$BOOMI_ACCOUNT_ID/PackagedComponent" \
 -u "$BOOMI_USERNAME:$BOOMI_PASSWORD" \
 -H "Content-Type: application/json" \
 -d '{
@@ -15,22 +15,21 @@ PACKAGE_RESPONSE=$(curl -s -o response1.json -w "%{http_code}" -X POST "https://
 }')
 
 echo "HTTP Status: $PACKAGE_RESPONSE"
-cat response1.json
-
+cat response1.xml
 
 if [ "$PACKAGE_RESPONSE" -ne 200 ]; then
   echo "Package creation FAILED"
   exit 1
 fi
 
-# Extract packageId
-PACKAGE_ID=$(grep -o '"packageId":"[^"]*' response1.json | cut -d'"' -f4)
+# ✅ Extract packageId from XML
+PACKAGE_ID=$(grep -oPm1 "(?<=<bns:packageId>)[^<]+" response1.xml)
 
-echo "Package ID: $PACKAGE_ID"
+echo "Extracted Package ID: $PACKAGE_ID"
 
 echo "Step 2: Deploying Package..."
 
-DEPLOY_RESPONSE=$(curl -s -o response2.json -w "%{http_code}" -X POST "https://api.boomi.com/api/rest/v1/$BOOMI_ACCOUNT_ID/DeployedPackage" \
+DEPLOY_RESPONSE=$(curl -s -o response2.xml -w "%{http_code}" -X POST "https://api.boomi.com/api/rest/v1/$BOOMI_ACCOUNT_ID/DeployedPackage" \
 -u "$BOOMI_USERNAME:$BOOMI_PASSWORD" \
 -H "Content-Type: application/json" \
 -d '{
@@ -40,9 +39,8 @@ DEPLOY_RESPONSE=$(curl -s -o response2.json -w "%{http_code}" -X POST "https://a
 }')
 
 echo "HTTP Status: $DEPLOY_RESPONSE"
-cat response2.json
+cat response2.xml
 
-# ❌ Fail if deployment fails
 if [ "$DEPLOY_RESPONSE" -ne 200 ]; then
   echo "Deployment FAILED"
   exit 1
