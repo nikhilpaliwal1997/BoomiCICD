@@ -1,23 +1,46 @@
-name: Boomi CI/CD
+name: Boomi CI/CD (Single Environment)
 
 on:
   push:
-    branches:
-      - main
+    paths:
+      - 'config/deployment.json'   # Trigger when config changes
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
+      # 1️⃣ Checkout Code
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # 2️⃣ Install jq
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+
+      # 3️⃣ Read Component ID from JSON
+      - name: Read deployment config
+        run: |
+          COMPONENT_ID=$(jq -r '.componentId' config/deployment.json)
+
+          echo "Component ID: $COMPONENT_ID"
+
+          echo "BOOMI_COMPONENT_ID=$COMPONENT_ID" >> $GITHUB_ENV
+
+      # 4️⃣ Give permission
+      - name: Give execute permission
+        run: chmod +x scripts/deploy.sh
+
+      # 5️⃣ Run Deployment
       - name: Run Deployment Script
         run: bash scripts/deploy.sh
         env:
           BOOMI_ACCOUNT_ID: ${{ secrets.BOOMI_ACCOUNT_ID }}
           BOOMI_USERNAME: ${{ secrets.BOOMI_USERNAME }}
           BOOMI_PASSWORD: ${{ secrets.BOOMI_PASSWORD }}
+
+          # ✅ Dynamic from JSON
+          BOOMI_COMPONENT_ID: ${{ env.BOOMI_COMPONENT_ID }}
+
+          # ✅ Static (only one environment)
           BOOMI_ENVIRONMENT_ID: ${{ secrets.BOOMI_ENVIRONMENT_ID }}
-          BOOMI_COMPONENT_ID: ${{ secrets.BOOMI_COMPONENT_ID }}
